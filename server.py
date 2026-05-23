@@ -1,7 +1,8 @@
 import os
 import subprocess
 import tempfile
-import sys
+import threading
+import uuid
 import whisper
 import anthropic
 from flask import Flask, request, jsonify
@@ -10,13 +11,10 @@ app = Flask(__name__)
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
+jobs = {}
+
 def download_audio(url, output_path):
-    cmd = [
-        "yt-dlp",
-        "-x", "--audio-format", "mp3",
-        "-o", output_path,
-        url
-    ]
+    cmd = ["yt-dlp", "-x", "--audio-format", "mp3", "-o", output_path, url]
     subprocess.run(cmd, check=True)
 
 def transcribe(audio_path):
@@ -49,21 +47,35 @@ Transcript:
     )
     return message.content[0].text
 
+def process_job(job_id, url):
+    try:
+        jobs[job_id] = {"status": "processing"}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            audio_path = os.path.join(tmpdir, "audio.mp3")
+            download_audio(url, audio_path)
+            transcript = transcribe(audio_path)
+            summary = summarize(transcript)
+            jobs[job_id] = {"status": "done", "summary": summary}
+    except Exception as e:
+        jobs[job_id] = {"status": "error", "error": str(e)}
+
 @app.route("/summarize", methods=["POST"])
 def handle_summarize():
     data = request.get_json()
     url = data.get("url")
     if not url:
         return jsonify({"error": "No URL provided"}), 400
-    try:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            audio_path = os.path.join(tmpdir, "audio.mp3")
-            download_audio(url, audio_path)
-            transcript = transcribe(audio_path)
-            summary = summarize(transcript)
-            return jsonify({"summary": summary})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    job_id = str(uuid.uuid4())
+    thread = threading.Thread(target=process_job, args=(job_id, url))
+    thread.start()
+    return jsonify({"job_id": job_id})
+
+@app.route("/result/<job_id>", methods=["GET"])
+def get_result(job_id):
+    job = jobs.get(job_id)
+    if not job:
+        return jsonify({"status": "not_found"}), 404
+    return jsonify(job)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5005))
