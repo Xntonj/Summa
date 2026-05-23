@@ -12,9 +12,8 @@ API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 def download_audio(url, output_path):
     cmd = [
-        os.path.expanduser("~/Library/Python/3.9/bin/yt-dlp"),
+        "yt-dlp",
         "-x", "--audio-format", "mp3",
-        "--ffmpeg-location", os.path.expanduser("~/bin/ffmpeg"),
         "-o", output_path,
         url
     ]

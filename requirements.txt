@@ -2,3 +2,4 @@ flask
 anthropic
 openai-whisper
 yt-dlp
+ffmpeg-python
