@@ -4,7 +4,8 @@ import tempfile
 import threading
 import uuid
 import sqlite3
-import whisper
+import time
+import requests
 import anthropic
 from flask import Flask, request, jsonify
 
@@ -46,9 +47,26 @@ def download_audio(url, output_path):
     subprocess.run(cmd, check=True)
 
 def transcribe(audio_path):
-    model = whisper.load_model("tiny")
-    result = model.transcribe(audio_path)
-    return result["text"]
+    aai_key = os.environ.get("ASSEMBLYAI_API_KEY")
+    headers = {"authorization": aai_key}
+
+    with open(audio_path, "rb") as f:
+        upload = requests.post("https://api.assemblyai.com/v2/upload", headers=headers, data=f)
+    audio_url = upload.json()["upload_url"]
+
+    response = requests.post("https://api.assemblyai.com/v2/transcript",
+                             headers=headers,
+                             json={"audio_url": audio_url})
+    transcript_id = response.json()["id"]
+
+    while True:
+        result = requests.get(f"https://api.assemblyai.com/v2/transcript/{transcript_id}",
+                              headers=headers).json()
+        if result["status"] == "completed":
+            return result["text"]
+        elif result["status"] == "error":
+            raise Exception(f"AssemblyAI error: {result['error']}")
+        time.sleep(3)
 
 def summarize(transcript):
     client = anthropic.Anthropic(api_key=API_KEY)

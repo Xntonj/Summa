@@ -1,5 +1,4 @@
 flask
 anthropic
-openai-whisper
+requests
 yt-dlp
-ffmpeg-python
