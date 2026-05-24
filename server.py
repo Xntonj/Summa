@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import threading
 import uuid
+import sqlite3
 import whisper
 import anthropic
 from flask import Flask, request, jsonify
@@ -10,8 +11,35 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+DB_PATH = "/tmp/jobs.db"
 
-jobs = {}
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS jobs (
+            id TEXT PRIMARY KEY,
+            status TEXT,
+            summary TEXT,
+            error TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def set_job(job_id, status, summary=None, error=None):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("INSERT OR REPLACE INTO jobs (id, status, summary, error) VALUES (?, ?, ?, ?)",
+                 (job_id, status, summary, error))
+    conn.commit()
+    conn.close()
+
+def get_job(job_id):
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute("SELECT status, summary, error FROM jobs WHERE id = ?", (job_id,)).fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {"status": row[0], "summary": row[1], "error": row[2]}
 
 def download_audio(url, output_path):
     cmd = ["yt-dlp", "-x", "--audio-format", "mp3", "--no-check-formats", "-o", output_path, url]
@@ -49,15 +77,15 @@ Transcript:
 
 def process_job(job_id, url):
     try:
-        jobs[job_id] = {"status": "processing"}
+        set_job(job_id, "processing")
         with tempfile.TemporaryDirectory() as tmpdir:
             audio_path = os.path.join(tmpdir, "audio.mp3")
             download_audio(url, audio_path)
             transcript = transcribe(audio_path)
             summary = summarize(transcript)
-            jobs[job_id] = {"status": "done", "summary": summary}
+            set_job(job_id, "done", summary=summary)
     except Exception as e:
-        jobs[job_id] = {"status": "error", "error": str(e)}
+        set_job(job_id, "error", error=str(e))
 
 @app.route("/summarize", methods=["POST"])
 def handle_summarize():
@@ -66,17 +94,19 @@ def handle_summarize():
     if not url:
         return jsonify({"error": "No URL provided"}), 400
     job_id = str(uuid.uuid4())
+    set_job(job_id, "queued")
     thread = threading.Thread(target=process_job, args=(job_id, url))
     thread.start()
     return jsonify({"job_id": job_id})
 
 @app.route("/result/<job_id>", methods=["GET"])
 def get_result(job_id):
-    job = jobs.get(job_id)
+    job = get_job(job_id)
     if not job:
         return jsonify({"status": "not_found"}), 404
     return jsonify(job)
 
 if __name__ == "__main__":
+    init_db()
     port = int(os.environ.get("PORT", 5005))
     app.run(host="0.0.0.0", port=port)
