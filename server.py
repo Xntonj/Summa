@@ -14,7 +14,7 @@ API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 jobs = {}
 
 def download_audio(url, output_path):
-    cmd = ["yt-dlp", "-x", "--audio-format", "mp3", "-o", output_path, url]
+    cmd = ["yt-dlp", "-x", "--audio-format", "mp3", "--no-check-formats", "-o", output_path, url]
     subprocess.run(cmd, check=True)
 
 def transcribe(audio_path):
