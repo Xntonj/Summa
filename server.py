@@ -48,20 +48,27 @@ def download_audio(url, output_path):
 
 def transcribe(audio_path):
     aai_key = os.environ.get("ASSEMBLYAI_API_KEY")
+    if not aai_key:
+        raise Exception("ASSEMBLYAI_API_KEY not set")
     headers = {"authorization": aai_key}
 
+    print("Uploading audio to AssemblyAI...")
     with open(audio_path, "rb") as f:
         upload = requests.post("https://api.assemblyai.com/v2/upload", headers=headers, data=f)
+    print(f"Upload response: {upload.status_code} {upload.text[:200]}")
     audio_url = upload.json()["upload_url"]
 
     response = requests.post("https://api.assemblyai.com/v2/transcript",
                              headers=headers,
                              json={"audio_url": audio_url})
+    print(f"Transcript request: {response.status_code} {response.text[:200]}")
     transcript_id = response.json()["id"]
 
+    print(f"Polling transcript {transcript_id}...")
     while True:
         result = requests.get(f"https://api.assemblyai.com/v2/transcript/{transcript_id}",
                               headers=headers).json()
+        print(f"Status: {result['status']}")
         if result["status"] == "completed":
             return result["text"]
         elif result["status"] == "error":
