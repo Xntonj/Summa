@@ -124,6 +124,13 @@ def get_result(job_id):
         return jsonify({"status": "not_found"}), 404
     return jsonify(job)
 
+@app.route("/text/<job_id>", methods=["GET"])
+def get_text(job_id):
+    job = get_job(job_id)
+    if not job or job["status"] != "done":
+        return "", 204
+    return job["summary"], 200, {"Content-Type": "text/plain"}
+
 if __name__ == "__main__":
     init_db()
     port = int(os.environ.get("PORT", 5005))
