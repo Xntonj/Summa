@@ -60,7 +60,7 @@ def transcribe(audio_path):
 
     response = requests.post("https://api.assemblyai.com/v2/transcript",
                              headers=headers,
-                             json={"audio_url": audio_url})
+                             json={"audio_url": audio_url, "speech_model": "universal-2"})
     print(f"Transcript request: {response.status_code} {response.text[:200]}")
     transcript_id = response.json()["id"]
 
