@@ -42,6 +42,19 @@ def get_job(job_id):
         return None
     return {"status": row[0], "summary": row[1], "error": row[2]}
 
+def get_metadata(url):
+    cmd = ["yt-dlp", "--dump-json", "--no-download", url]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        return {}
+    import json
+    data = json.loads(result.stdout)
+    return {
+        "title": data.get("title", ""),
+        "description": data.get("description", ""),
+        "uploader": data.get("uploader", ""),
+    }
+
 def download_audio(url, output_path):
     cmd = ["yt-dlp", "-x", "--audio-format", "mp3", "--no-check-formats", "-o", output_path, url]
     subprocess.run(cmd, check=True)
@@ -75,7 +88,7 @@ def transcribe(audio_path):
             raise Exception(f"AssemblyAI error: {result['error']}")
         time.sleep(3)
 
-def summarize(transcript):
+def summarize(transcript, metadata={}):
     client = anthropic.Anthropic(api_key=API_KEY)
     message = client.messages.create(
         model="claude-opus-4-7",
@@ -95,6 +108,11 @@ Then summarize accordingly:
 
 Use your judgment — keep what's relevant, skip the fluff. Don't be too rigid about structure. Start with the detected category label.
 
+Video metadata:
+Title: {metadata.get('title', 'N/A')}
+Creator: {metadata.get('uploader', 'N/A')}
+Description: {metadata.get('description', 'N/A')}
+
 Transcript:
 {transcript}"""}]
     )
@@ -105,10 +123,20 @@ def process_job(job_id, url):
         set_job(job_id, "processing")
         with tempfile.TemporaryDirectory() as tmpdir:
             audio_path = os.path.join(tmpdir, "audio.mp3")
+
+            metadata_result = {}
+            def fetch_metadata():
+                metadata_result.update(get_metadata(url))
+
+            meta_thread = threading.Thread(target=fetch_metadata)
+            meta_thread.start()
             download_audio(url, audio_path)
+            meta_thread.join()
+
             transcript = transcribe(audio_path)
-            summary = summarize(transcript)
-            set_job(job_id, "done", summary=summary)
+            summary = summarize(transcript, metadata_result)
+            note_content = f"Source: {url}\n\n{summary}"
+            set_job(job_id, "done", summary=note_content)
     except Exception as e:
         set_job(job_id, "error", error=str(e))
 
