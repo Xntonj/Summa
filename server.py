@@ -7,7 +7,7 @@ import sqlite3
 import time
 import requests
 import anthropic
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, abort
 
 app = Flask(__name__)
 
@@ -165,6 +165,24 @@ def get_text(job_id):
     if not job or job["status"] != "done":
         return "", 204
     return job["summary"], 200, {"Content-Type": "text/plain"}
+
+CONTRACT_PASSWORD = os.environ.get("CONTRACT_PASSWORD", "r365family")
+
+@app.route("/contract")
+def contract():
+    pwd = request.args.get("pwd", "")
+    if pwd != CONTRACT_PASSWORD:
+        return """
+        <html><body style="font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0">
+        <h2>Enter password</h2>
+        <form method="get">
+            <input name="pwd" type="password" placeholder="Password" style="padding:10px;font-size:16px;border:1px solid #ccc;border-radius:6px" autofocus>
+            <button type="submit" style="margin-left:8px;padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer">View</button>
+        </form>
+        </body></html>
+        """, 401
+    return render_template("contract.html")
+
 
 if __name__ == "__main__":
     init_db()

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>R365 vs Deel — Visual Contract Review</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0d1014;
+    --panel:#161b22;
+    --panel2:#1d242e;
+    --panel3:#232c38;
+    --ink:#eef2f7;
+    --sub:#94a0b0;
+    --line:#2b333f;
+    --es:#f0ad4e;
+    --en:#5fa8e8;
+    --red:#ff5d52;
+    --orange:#ffb02e;
+    --blue:#54a0ff;
+    --green:#3ddc84;
+    --deel:#5b9bd5;
+    --r365:#ff5d52;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Spline Sans',-apple-system,system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    background-image:radial-gradient(circle at 12% 6%, rgba(255,93,82,.09), transparent 38%),
+                     radial-gradient(circle at 88% 96%, rgba(84,160,255,.08), transparent 38%);
+  }
+  .wrap{max-width:580px;margin:0 auto;padding:24px 16px 60px}
+
+  header{text-align:center;margin-bottom:24px}
+  .eyebrow{font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;color:var(--es);font-weight:700;margin-bottom:9px}
+  h1{font-size:1.9rem;font-weight:800;letter-spacing:-.02em;line-height:1.08}
+  .lede{font-size:.9rem;color:var(--sub);margin-top:9px}
+
+  /* versus chips */
+  .versus{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 4px}
+  .vchip{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .vchip .nm{font-weight:800;font-size:.95rem}
+  .vchip .tg{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sub)}
+  .vchip.deel .nm{color:var(--deel)} .vchip.r365 .nm{color:var(--r365)}
+  .vs{font-size:.8rem;font-weight:800;color:var(--sub);background:var(--panel2);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+
+  .tap-hint{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;background:var(--panel2);border:1px solid var(--line);border-radius:30px;padding:9px 16px;font-size:.8rem;color:var(--sub)}
+  .tap-hint b{color:var(--ink)}
+
+  /* SECTION HEADERS */
+  .sec-h{display:flex;align-items:center;gap:10px;margin:30px 4px 14px}
+  .sec-h .si{font-size:1.3rem}
+  .sec-h .st{font-size:1.15rem;font-weight:800}
+  .sec-h .line{flex:1;height:1px;background:var(--line)}
+
+  /* ===== AT-A-GLANCE SCORE STRIP ===== */
+  .score{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px}
+  .scard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 12px;text-align:center}
+  .scard .big{font-size:1.9rem;font-weight:800;line-height:1}
+  .scard .lbl{font-size:.72rem;color:var(--sub);margin-top:6px;font-weight:600}
+  .scard.win .big{color:var(--green)}
+  .scard.flaw .big{color:var(--red)}
+  .scard.same .big{color:var(--sub)}
+
+  /* ===== BENEFIT / FLAW ROWS (tappable) ===== */
+  .blist{display:flex;flex-direction:column;gap:10px}
+  .brow{
+    background:var(--panel);border:1px solid var(--line);border-radius:15px;
+    padding:14px 14px 14px 14px;cursor:pointer;transition:.16s;position:relative;overflow:hidden;
+  }
+  .brow:active{transform:scale(.99);background:var(--panel2)}
+  .brow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .brow.good::before{background:var(--green)}
+  .brow.bad::before{background:var(--red)}
+  .brow.warn::before{background:var(--orange)}
+  .brow.neutral::before{background:var(--sub)}
+
+  .brow-top{display:flex;align-items:center;gap:13px}
+  .bicon{width:46px;height:46px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+  .bicon.good{background:rgba(61,220,132,.13)}
+  .bicon.bad{background:rgba(255,93,82,.13)}
+  .bicon.warn{background:rgba(255,176,46,.13)}
+  .bicon.neutral{background:rgba(148,160,176,.12)}
+  .bmain{flex:1;min-width:0}
+  .btitle{font-size:1rem;font-weight:700;line-height:1.18}
+  .bsub{font-size:.78rem;color:var(--sub);margin-top:2px}
+  .btag{font-size:.6rem;font-weight:800;padding:4px 9px;border-radius:20px;flex-shrink:0;letter-spacing:.03em;text-transform:uppercase}
+  .btag.good{background:rgba(61,220,132,.16);color:var(--green)}
+  .btag.bad{background:rgba(255,93,82,.16);color:#ff8d85}
+  .btag.warn{background:rgba(255,176,46,.16);color:var(--orange)}
+  .btag.neutral{background:rgba(148,160,176,.14);color:var(--sub)}
+
+  /* mini deel/r365 compare strip inside benefit rows */
+  .vbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .vcell{border-radius:10px;padding:8px 11px;font-size:.8rem}
+  .vcell .vl{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;font-weight:800;display:block;margin-bottom:3px;opacity:.8}
+  .vcell.d{background:rgba(91,155,213,.12);border:1px solid rgba(91,155,213,.25)}
+  .vcell.d .vl{color:var(--deel)}
+  .vcell.r{background:rgba(255,93,82,.1);border:1px solid rgba(255,93,82,.22)}
+  .vcell.r .vl{color:var(--r365)}
+  .vcell .vv{font-weight:600;color:var(--ink)}
+
+  .moreline{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:11px;font-size:.7rem;color:var(--blue);font-weight:700}
+
+  /* ===== CLAUSE QUOTE (tappable, magnifier OUTSIDE text) ===== */
+  .clause{
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:18px 16px;margin-bottom:14px;position:relative;overflow:hidden;
+  }
+  .clause::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+  .clause.red::before{background:var(--red)}
+  .clause.orange::before{background:var(--orange)}
+  .clause.blue::before{background:var(--blue)}
+
+  .cl-top{display:flex;align-items:center;gap:14px;margin-bottom:13px}
+  .cl-icon{width:54px;height:54px;border-radius:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.7rem}
+  .cl-icon.red{background:rgba(255,93,82,.14)}
+  .cl-icon.orange{background:rgba(255,176,46,.14)}
+  .cl-icon.blue{background:rgba(84,160,255,.14)}
+  .cl-ht{flex:1}
+  .cl-ref{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--sub)}
+  .cl-headline{font-size:1.15rem;font-weight:800;line-height:1.13;margin-top:3px}
+  .clause.red .cl-headline{color:#ffb3ad}
+  .clause.orange .cl-headline{color:#ffd591}
+  .clause.blue .cl-headline{color:#a9d0ff}
+
+  .cl-meaning{font-size:.88rem;color:var(--sub);margin-bottom:14px}
+  .cl-meaning b{color:var(--ink)}
+  .origbtns{display:flex;flex-direction:column;gap:9px;margin-bottom:4px}
+  .origbtn{display:flex;align-items:center;gap:9px;width:100%;text-align:left;cursor:pointer;font-family:inherit;
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:.16s}
+  .origbtn:active{transform:scale(.99);background:var(--panel3)}
+  .origbtn .fl{font-size:.78rem;font-weight:800}
+  .origbtn.es .fl{color:var(--es)} .origbtn.en .fl{color:var(--en)}
+  .origbtn .go{margin-left:auto;font-size:.72rem;font-weight:700;color:var(--blue)}
+
+  .qblock{
+    background:var(--panel2);border:1px solid var(--line);border-radius:13px;
+    padding:13px 14px 13px 14px;margin-bottom:10px;cursor:pointer;transition:.16s;
+  }
+  .qblock:active{transform:scale(.99);background:var(--panel3)}
+  .qhead{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .qhead .fl{font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;font-weight:800}
+  .qblock.es .qhead .fl{color:var(--es)}
+  .qblock.en .qhead .fl{color:var(--en)}
+  .govchip{font-size:.54rem;font-weight:800;color:#1a1208;background:var(--es);padding:2px 7px;border-radius:20px;letter-spacing:.04em}
+  /* magnifier sits in header row, NOT over text */
+  .qhead .mag{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:.66rem;font-weight:700;color:var(--sub);background:rgba(255,255,255,.05);padding:4px 9px;border-radius:20px}
+  .qtext{font-size:.88rem;line-height:1.5;color:var(--ink);font-style:italic}
+  .qtext .hi{font-style:normal;font-weight:700;border-bottom:2px dotted}
+  .qblock.es .qtext .hi{color:var(--es);border-color:var(--es)}
+  .qblock.en .qtext .hi{color:var(--en);border-color:var(--en)}
+
+  .lawnote{background:rgba(255,176,46,.07);border:1px solid rgba(255,176,46,.28);border-radius:12px;padding:13px 14px;margin-top:13px}
+  .lawnote .lh{font-weight:700;font-size:.84rem;color:var(--orange);margin-bottom:5px}
+  .lawnote p{font-size:.83rem;color:#cdd4de}
+  .lawnote b{color:#fff}
+  .actionflag{display:inline-flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-size:.73rem;font-weight:700;padding:7px 12px;border-radius:9px;margin-top:11px}
+
+  .foot{font-size:.72rem;color:var(--sub);text-align:center;margin-top:28px;line-height:1.6;font-style:italic;padding:0 8px}
+
+  /* ===== POPUP (screenshot OR benefit detail) ===== */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.72);opacity:0;pointer-events:none;transition:opacity .26s;z-index:60;backdrop-filter:blur(3px)}
+  .scrim.on{opacity:1;pointer-events:auto}
+
+  .pop{
+    position:fixed;z-index:70;left:50%;top:50%;
+    transform:translate(-50%,-46%) scale(.93);opacity:0;pointer-events:none;
+    width:min(93vw,450px);max-height:82vh;
+    transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .26s;
+  }
+  .pop.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+  .pop-close{position:absolute;top:-14px;right:-6px;width:34px;height:34px;border-radius:50%;background:#fff;color:#111;border:none;font-size:1.25rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:5}
+
+  /* screenshot styling */
+  .shot-frame{background:#fbfbf9;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;max-height:82vh;border:1px solid rgba(0,0,0,.1)}
+  .shot-bar{background:#e9e6df;padding:9px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #d6d2c8;flex-shrink:0}
+  .dots{display:flex;gap:5px}
+  .dots i{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .dots .r{background:#ff5f57}.dots .y{background:#febc2e}.dots .g{background:#28c840}
+  .shot-bar .fname{font-size:.68rem;color:#7a756a;font-weight:600;margin-left:4px;font-family:'Spline Sans Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shot-bar .env{margin-left:auto;font-size:.55rem;color:#a39d90;font-family:'Spline Sans Mono',monospace;flex-shrink:0}
+  .shot-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .shot-logo{text-align:center;padding:13px 0 7px;font-weight:800;font-size:1.02rem;color:#111}
+  .shot-logo .r3{color:#c8102e}
+  .shot-cols{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #c8102e}
+  .shot-col{padding:13px 13px 17px;font-size:.73rem;line-height:1.6;color:#1a1a1a}
+  .shot-col.l{border-right:1px solid #d6d2c8}
+  .shot-col .clabel{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:#999;margin-bottom:7px;display:block}
+  .shot-col h4{font-size:.72rem;font-weight:800;text-transform:uppercase;margin-bottom:6px;color:#111}
+  .shot-col p{margin-bottom:7px}
+  .shot-col em{color:#777}
+  .shot-col .mark{background:#fff3a0;padding:0 2px;font-weight:600}
+  .shot-cap{background:#fff;padding:10px 14px;border-top:1px solid #e4e0d6;font-size:.65rem;color:#8a857a;font-style:italic;text-align:center;flex-shrink:0}
+
+  /* benefit-detail popup (dark) */
+  .bpop{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;max-height:82vh;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .bpop-head{padding:18px 18px 14px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--line)}
+  .bpop-head .bi{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+  .bpop-head h3{font-size:1.12rem;font-weight:800}
+  .bpop-head .hs{font-size:.76rem;color:var(--sub)}
+  .bpop-body{overflow-y:auto;padding:16px 18px 22px;-webkit-overflow-scrolling:touch}
+  .bpop-body .vbar{margin:0 0 14px}
+  .bpop-body .verdict{font-size:.9rem;line-height:1.55;color:#cdd4de}
+  .bpop-body .verdict b{color:#fff}
+  .bpop-body .verdict + .verdict{margin-top:10px}
+  .viewOrig{margin-top:16px;width:100%;background:var(--blue);color:#06121f;border:none;border-radius:11px;padding:12px;font-size:.88rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:.16s}
+  .viewOrig:active{transform:scale(.98);filter:brightness(1.08)}
+
+  @media(max-width:430px){
+    h1{font-size:1.62rem}
+    .score{grid-template-columns:1fr 1fr 1fr}
+    .shot-cols{grid-template-columns:1fr}
+    .shot-col.l{border-right:none;border-bottom:1px solid #d6d2c8}
+    .vbar,.bpop-body .vbar{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Restaurant365 · Employment Contract</div>
+    <h1>What changes when you sign</h1>
+    <div class="lede">Benefits, flaws &amp; the literal wording — tap anything to dig in.</div>
+    <div class="versus">
+      <div class="vchip deel"><span class="nm">Deel</span><span class="tg">current · old</span></div>
+      <div class="vs">vs</div>
+      <div class="vchip r365"><span class="nm">R365</span><span class="tg">new · to sign</span></div>
+    </div>
+    <div class="tap-hint">🔍 Tap a quote to see the <b>original contract text</b></div>
+  </header>
+
+  <!-- ===== SCORE STRIP ===== -->
+  <div class="sec-h"><span class="si">⚖️</span><span class="st">At a glance</span><span class="line"></span></div>
+  <div class="score">
+    <div class="scard win"><div class="big">3</div><div class="lbl">You gain</div></div>
+    <div class="scard flaw"><div class="big">6</div><div class="lbl">Watch out</div></div>
+    <div class="scard same"><div class="big">10</div><div class="lbl">Unchanged</div></div>
+  </div>
+
+  <!-- ===== BENEFITS & FLAWS ===== -->
+  <div class="sec-h"><span class="si">📊</span><span class="st">Benefits &amp; flaws</span><span class="line"></span></div>
+  <div class="blist" id="benefitList"></div>
+
+  <!-- ===== KEY CLAUSES (with original wording) ===== -->
+  <div class="sec-h"><span class="si">📌</span><span class="st">Key clauses to catch</span><span class="line"></span></div>
+  <div id="clauseList"></div>
+
+  <p class="foot">Original wording transcribed from the agreement you uploaded; Spanish governs (Sec. 25). A careful plain-language read, not formal legal advice — confirm the antigüedad point with a Mexican abogado laboral before signing.</p>
+</div>
+
+<!-- POPUP CONTAINER -->
+<div class="scrim" id="scrim"></div>
+<div class="pop" id="pop">
+  <button class="pop-close" id="popClose">×</button>
+  <div id="popInner"></div>
+</div>
+
+<script>
+/* ---------- BENEFITS & FLAWS ---------- */
+const BENEFITS = [
+  { type:"good", tag:"Gain", icon:"💵", title:"Higher pay & vouchers",
+    sub:"Base salary and food vouchers both go up",
+    deel:"Lower base + vouchers", r365:"Higher base + vouchers",
+    verdict:["Both your base salary and monthly food vouchers increase under R365.","<b>Net positive</b> on cash — the headline reason the move looks attractive."] },
+  { type:"good", tag:"Gain", icon:"🏦", title:"Savings fund (10% match)",
+    sub:"Employer matches your contribution — new benefit",
+    deel:"Not offered", r365:"10% employer match",
+    verdict:["R365 adds an employer-matched savings fund (fondo de ahorro): you put in up to 10%, they match it, capped at the legal 1.3 UMA/year.","<b>Real extra compensation</b> Deel didn't give you — returned with earnings at the end of the period."] },
+  { type:"good", tag:"Gain", icon:"🏥", title:"Day-1 health & life insurance",
+    sub:"Major medical, dental/vision, 2× salary life",
+    deel:"Private insurance, policy-based", r365:"Coverage from Day 1",
+    verdict:["R365's benefits summary lists major medical (MetLife), dental & vision, and 2× salary life insurance, effective from day one.","Comparable in spirit to Deel's private insurance, but spelled out more concretely."] },
+
+  { type:"bad", tag:"Flaw", icon:"⏳", title:"Tenure resets",
+    sub:"Seniority counted only from June 2, 2026",
+    deel:"Started Sep 22, 2025", r365:"Resets to Jun 2, 2026",
+    verdict:["The biggest flaw. ~8 months of antigüedad stops counting — affecting severance, prima de antigüedad and vacation accrual.","See the clause section below for the exact wording and how to push back."] },
+  { type:"bad", tag:"Flaw", icon:"🏠", title:"Telework allowance lost",
+    sub:"Office-based now — perk no longer applies",
+    deel:"Monthly telework allowance", r365:"None (you won't qualify)",
+    verdict:["The monthly telework allowance disappears because the home-office support needs 3+ remote days/week, and you're capped below that.","You also lose the ergonomic-chair / remote-expense perks unless eligible."] },
+  { type:"warn", tag:"Flaw", icon:"🏢", title:"Less remote flexibility",
+    sub:"Up to 3 office days/week, adjustable",
+    deel:"Full telework, anywhere in MX", r365:"Hybrid · remote capped 40%",
+    verdict:["From full telework to office-anchored: up to 3 in-office days if your schedule hits Tue–Thu, remote capped at 40% of hours.","The company can change your schedule or location with 10 days' notice."] },
+  { type:"bad", tag:"Flaw", icon:"🔒", title:"New exclusivity rule",
+    sub:"No similar side work or competitor stakes",
+    deel:"Non-compete: No aplica", r365:"Exclusive to the Company",
+    verdict:["Deel explicitly said non-compete and non-solicit were 'Not applicable.' R365 adds them back.","Enforceable during employment; post-termination non-competes are hard to enforce in Mexico."] },
+  { type:"warn", tag:"Flaw", icon:"🛡️", title:"'Trust employee' status",
+    sub:"Weaker reinstatement rights",
+    deel:"Not a trust employee", r365:"Empleado de confianza",
+    verdict:["Trust employees can be denied reinstatement (employer pays compensation instead, Art. 49 LFT).","Whether a support role truly qualifies is arguable — see the clause section."] },
+  { type:"warn", tag:"Flaw", icon:"🧾", title:"No payslip dispute window",
+    sub:"Each receipt treated as a full waiver",
+    deel:"5 business days to dispute", r365:"No dispute window",
+    verdict:["Deel gave you 5 business days to challenge a receipt. R365 drops that — silence = full agreement each period.","Statutory rights are still irrenunciable (Art. 5 LFT), but the burden shifts to you."] },
+
+  { type:"neutral", tag:"Same", icon:"🗓️", title:"Core conditions unchanged",
+    sub:"Hours, vacation, aguinaldo, jurisdiction",
+    deel:"40h/wk · 12 vac · 30-day aguinaldo", r365:"Same",
+    verdict:["Both keep: 40-hour week over 5 days, 2 rest days, 1-hour meal break, 12 vacation days year one, 25% vacation premium, 30-day aguinaldo.","Spanish version prevails, CDMX labor courts, IP assigned to employer, confidentiality — all the same."] }
+];
+
+/* ---------- KEY CLAUSES with original wording ---------- */
+const CLAUSES = [
+  { color:"red", icon:"⏳", ref:"Section 19 · Fecha de Contratación", headline:"Your tenure will be affected",
+    meaning:"Start date resets to <b>June 2, 2026</b> — your time from Sep 2025 stops counting toward seniority.",
+    shot:"tenure",
+    law:`If it's the same role/group, Art. 41 LFT (<b>patrón sustituto</b>) should carry your Sep 22, 2025 date over. <b>~8 months</b> of antigüedad is at stake.`,
+    flag:"⚑ Ask in writing to keep the Sep 22, 2025 date" },
+
+  { color:"red", icon:"📝", ref:"Section 24.1 · Contratos Adicionales", headline:"You sign away past claims",
+    meaning:"Signing says the company <b>owes you nothing</b> from before — this locks in the tenure reset.",
+    shot:"release",
+    law:`Don't sign until Section 19's date is fixed — this clause makes the gap <b>hard to recover</b> later.`,
+    flag:"" },
+
+  { color:"red", icon:"🔒", ref:"Section 2 · Exclusividad", headline:"New exclusivity rule",
+    meaning:"Deel said <b>'No aplica.'</b> R365 adds it: no similar side work, no competitor stakes, no recruiting colleagues.",
+    shot:"excl",
+    law:`Post-termination non-competes are <b>hard to enforce</b> in Mexico, but while employed this binds you.`,
+    flag:"" },
+
+  { color:"red", icon:"🛡️", ref:"Representations X & XI", headline:'Labeled "trust employee"',
+    meaning:'"Empleado de confianza" sounds nice but <b>weakens reinstatement rights</b> if dismissed.',
+    shot:"conf",
+    law:`Under Art. 49 LFT the employer can <b>refuse reinstatement</b> by paying you off. Your real duties decide this — a support role isn't obviously confianza, so it's <b>arguable</b>.`,
+    flag:"" },
+
+  { color:"orange", icon:"🧾", ref:"Section 13 · Recibos de Nómina", headline:"Each payslip = a waiver",
+    meaning:"Accepting a receipt = agreeing it covered everything. Deel gave 5 days to dispute; R365 gives <b>no window</b>.",
+    shot:"receipt",
+    law:`Courts won't let a payslip waive truly unpaid statutory rights (Art. 5 LFT) — but it shifts the burden to you.`,
+    flag:"⚑ Ask to restore a 5-day dispute window" },
+
+  { color:"orange", icon:"📅", ref:"Section 8 · Días de Descanso Obligatorios", headline:"Holiday work expected",
+    meaning:'Your role is framed as "critical ops," so you agree up front to work statutory holidays when assigned.',
+    shot:"holiday",
+    law:`You're still owed Art. 75 premium pay, but the <b>default expectation flipped</b> toward "yes, you cover holidays."`,
+    flag:"" },
+
+  { color:"blue", icon:"⏱️", ref:"Section 20.1 · Tiempo Indefinido", headline:"Probation with no length",
+    meaning:"Spanish adds a probation period; English doesn't mention it — and <b>no duration is stated</b>.",
+    shot:"probation",
+    law:`Spanish prevails and the two versions don't match. A continuing employee shouldn't face fresh probation at all.`,
+    flag:"⚑ Confirm probation length in writing — or remove it" },
+
+  { color:"orange", icon:"👁️", ref:"Section 26 · Herramientas de Trabajo", headline:"No privacy on devices",
+    meaning:"Company can monitor your email, laptop & phone <b>remotely, anytime, without telling you</b>.",
+    shot:"privacy",
+    law:`Standard, but real: <b>keep personal activity off company devices</b>. They can also deduct repair cost for lost equipment.`,
+    flag:"" }
+];
+
+/* ---------- ORIGINAL SCREENSHOTS — COMPLETE clause text, no truncation ---------- */
+const SHOTS = {
+  tenure:{file:"R365-agreement · Section 19", enH:"Section 19. Hiring Date.", esH:"Cláusula Décima Novena. Fecha de Contratación.",
+    en:`<p>For all legal purposes of this Agreement, the hiring date and employment commencement is June 2, 2026. However, for purposes of tenure and for the calculation of certain benefits that depend on such, the Company <span class="mark">recognizes tenure as of June 2, 2026</span>.</p>`,
+    es:`<p>Para todos los efectos legales a que haya lugar, la fecha de contratación y de inicio de la relación de trabajo es el 2 de junio de 2026. No obstante, para efectos de antigüedad y del cálculo de ciertas prestaciones que dependen de la misma, la Empresa <span class="mark">reconoce al Trabajador antigüedad a partir del 2 de junio de 2026</span>.</p>`},
+
+  release:{file:"R365-agreement · Section 24", enH:"Section 24. Other Agreements.", esH:"Cláusula Vigésima Cuarta. Contratos Adicionales.",
+    en:`<p>24.1. This Agreement prevails over, and completely supersedes and entirely replaces any other agreement, offer letter or update agreement previously entered into, whether orally or in writing, between the Company and the Employee regarding the Employee's services, be it as an independent consultant, as a subordinated employee, or in any other way, as well as any prior employment offer letter. Accordingly, the Employee recognizes that the Company <span class="mark">does not owe him anything</span>, under or in connection to any previous oral or written agreement or relationship, and hereby grants a <span class="mark">full and unconditional release</span> to the Company for any obligation set forth in, or arising from, any applicable laws in connection with previous agreements or relationships entered between the parties.</p>`,
+    es:`<p>24.1. Este Contrato prevalecerá, dejará sin efectos y reemplazará en su totalidad a cualquier otro contrato, carta oferta o convenio de modificación verbal o escrito, celebrado con anterioridad entre la Empresa y el Trabajador, para que éste actúe como asesor independiente, empleado subordinado o en cualquier otro carácter, así como cualquier oferta de trabajo anterior. Por consiguiente, el Trabajador reconoce que la Empresa <span class="mark">no le adeuda nada</span>, conforme a algún contrato o relación pasada, ya sea verbal o escrita, o con respecto a alguno de ellos y otorga en este acto el <span class="mark">finiquito más amplio e incondicional</span> a favor de la Empresa por las obligaciones previstas o derivadas de las leyes aplicables o relacionadas con los contratos o relaciones anteriores celebradas entre las partes.</p>`},
+
+  excl:{file:"R365-agreement · Section 2", enH:"Section 2. Exclusivity of Services.", esH:"Cláusula Segunda. Exclusividad de los Servicios.",
+    en:`<p>The Employee expressly agrees that he will <span class="mark">provide his services exclusively to the Company</span>. For the duration of this Agreement, the Employee agrees that he shall not undertake, whether for compensation or otherwise, either directly or indirectly (through third parties, be it individuals or legal entities), activities that are similar or analogous to those contemplated in this Agreement, or those which are undertaken by the Company, for parties other than the Company, unless otherwise instructed or allowed by the Company. Furthermore, the Employee agrees not to, without the Company's consent, invest in or acquire an interest, shares and/or participation, directly or indirectly, in companies, entities, assets, enterprises, business ventures and/or institutions which conduct activities analogous or similar to those contemplated in this Agreement or those which constitute the corporate purposes of the Company, whether as owner, part-owner, stockholder, partner, director, officer, trustee, representative, agent, consultant or in any other capacity, on Employee's own behalf or on behalf of any corporation, partnership or other business organization, or recruit, or otherwise solicit or induce any person who is an employee or consultant of the Company to terminate his or her employment with, or otherwise cease his or her relationship with the Company.</p>`,
+    es:`<p>El Trabajador se obliga expresamente a <span class="mark">prestar sus servicios exclusivamente a la Empresa</span>. Durante la vigencia del presente Contrato, el Trabajador se obliga a no aceptar, ya sea mediante compensación o de manera gratuita, directa o indirectamente (a través de terceros, ya sean personas físicas o morales), actividades que sean similares o análogas a las previstas en el presente Contrato, o a las que la Empresa desarrolle, para terceros distintos a la Empresa, a menos que ésta lo autorice o instruya. Asimismo, el Trabajador se obliga a que sin el consentimiento de la Empresa, no invertirá ni adquirirá derechos, acciones y/o participaciones, directa o indirectamente, en empresas, personas morales, activos, coinversiones y/o instituciones que realicen actividades análogas o similares a las previstas en el presente Contrato o que constituya el objeto social de la Empresa, ya sea como propietario, copropietario, accionista, socio, consejero, funcionario, fiduciario, representante, agente, asesor o en cualquier otro carácter, ya sea por su propio derecho o en representación de alguna sociedad de personas o capital u organización comercial, ni contratará, llamará o inducirá a ninguna persona que sea empleado o asesor de la Empresa con el objeto de que dé por terminado su contrato de trabajo o de alguna otra forma dé por terminadas sus relaciones con la Empresa.</p>`},
+
+  conf:{file:"R365-agreement · Reps X–XI", enH:"Representations X & XI.", esH:"Declaraciones X y XI.",
+    en:`<p>X. The Employee will perform functions of trust, so his category and job position is considered professional and specialized and trustworthy under section 9 and of the Federal Labor Law.</p><p>XI. The Employee <span class="mark">expressly accepts his position of trust</span>.</p>`,
+    es:`<p>X. El Trabajador desempeñará funciones de confianza por lo que su categoría y puesto de trabajo se considera de carácter profesional especializado y de confianza al amparo de lo dispuesto por el artículo 9 de la Ley Federal del Trabajo.</p><p>XI. El Trabajador <span class="mark">expresamente acepta su puesto y/o categoría de confianza</span>.</p>`},
+
+  receipt:{file:"R365-agreement · Section 13", enH:"Section 13. Employee Salary Receipts.", esH:"Cláusula Décima Tercera. Recibos de Nómina.",
+    en:`<p>On each Payday, the Employee agrees to receive an electronic salary receipt provided by the Company covering the total amount of the compensation earned up through each respective Payday. The Employee acknowledges and expressly agrees that the reception of said receipt shall be deemed as an acknowledgment by the Employee that the compensation so received covers all work performed thereof, <span class="mark">without any right by the Employee to later demand the payment of any accrued benefits</span> in arrears for the respective period. The electronic payment receipt or tax digital receipt CFDI shall constitute a <span class="mark">full release of the Company</span> of all salary and all other accrued benefits in arrears for the respective period to which the Employee may have been entitled to for the services performed up to the respective Payday, regardless of whether the receipt omits a statement to that effect.</p>`,
+    es:`<p>El Trabajador se obliga a recibir en cada Día de Pago un recibo de pago electrónico que le entregará la Empresa por la totalidad de las cantidades devengadas hasta esa fecha. El Trabajador reconoce y conviene en forma expresa que la recepción de dicho recibo implicará su conformidad de que la remuneración recibida cubre el trabajo desempeñado hasta esa fecha, <span class="mark">sin que pueda exigir posteriormente el pago de prestación alguna</span> por el período de que se trate. El recibo de pago electrónico o comprobante fiscal digital CFDI correspondiente implicará un <span class="mark">finiquito total de la Empresa</span> de todos los sueldos y prestaciones devengadas por el Trabajador con relación al período correspondiente por los servicios prestados hasta esa fecha, independientemente de que dicho recibo contenga o no una declaración en tal sentido.</p>`},
+
+  holiday:{file:"R365-agreement · Section 8", enH:"Section 8. Mandatory Days Off.", esH:"Cláusula Octava. Días de Descanso Obligatorios.",
+    en:`<p>The Employee acknowledges that his/her position <span class="mark">supports continuous or critical operations</span> and, therefore, may require him/her to work on the legal holidays listed in Article 74 of the Federal Labor Law. The Employee <span class="mark">agrees to work on such holidays when assigned</span> under the employer's holiday coverage system described in the Internal Work Rules, subject to reasonable notice and published rosters. Any services rendered on a legal holiday will be paid in accordance with Article 75 of the Federal Labor Law. Nothing in this clause waives or diminishes rights granted by applicable law.</p>`,
+    es:`<p>El Trabajador reconoce que el puesto que desempeñará <span class="mark">apoya operaciones continuas o críticas</span> y, por lo tanto, puede requerir la prestación de servicios en los días de descanso obligatorio previstos en el artículo 74 de la Ley Federal del Trabajo. El Trabajador <span class="mark">acepta laborar en dichos días cuando sea asignado</span> conforme al sistema de cobertura de días festivos de la Empresa descrito en el Reglamento Interior de Trabajo, sujeto a aviso razonable y a las listas publicadas. Cualquier servicio prestado en un día festivo será pagado de conformidad con el artículo 75 de la Ley Federal del Trabajo. Nada de lo establecido en esta cláusula constituye renuncia ni disminuye los derechos que concede la Ley Federal del Trabajo.</p>`},
+
+  probation:{file:"R365-agreement · Section 20.1", enH:"Section 20. Undetermined Term.", esH:"Cláusula Vigésima. Tiempo Indefinido.",
+    en:`<p>20.1. This Agreement is entered into for an undetermined period and may only be suspended, terminated with cause or concluded in accordance with the provisions set out in the Mexican Federal Labor Law or by the mutual agreement of the parties hereto. <em>(Note: the English text makes no mention of a probation period — the Spanish does.)</em></p>`,
+    es:`<p>20.1. Este Contrato es por tiempo indefinido <span class="mark">con Periodo de Prueba</span> y únicamente podrá suspenderse, rescindirse o darse por terminado conforme a lo previsto en la Ley Federal del Trabajo o por mutuo consentimiento de las partes. <em>(Nota: el texto no especifica la duración del periodo de prueba.)</em></p>`},
+
+  privacy:{file:"R365-agreement · Section 26", enH:"Section 26. Working Tools.", esH:"Cláusula Vigésima Sexta. Herramientas de Trabajo.",
+    en:`<p>Additionally, the Employee acknowledges and expresses his consent for the Company to access, monitor, oversee and inspect, as often as the Company deems necessary, <span class="mark">even remotely and without giving notice to the Employee</span>, his e-mail, computer equipment and cellular telephones (if applicable), or any other Work Tools provided by the Company, without this implying any violation of privacy, since said Work Tools are owned by the Company and are provided solely for performing his work activities and duties. Therefore, the Employee shall <span class="mark">not have any expectation of privacy</span> with respect to his use of Work Tools.</p>`,
+    es:`<p>Adicionalmente, el Trabajador reconoce y expresa su consentimiento para que la Empresa acceda, monitoree, vigile e inspeccione, las veces que considere necesario, <span class="mark">inclusive de manera remota y sin necesidad de avisar al Trabajador</span>, el correo electrónico, equipos de cómputo y teléfonos celulares (en su caso), o cualesquiera de las Herramientas de Trabajo que le facilite la Empresa, sin que ello implique violación alguna a su privacidad, pues dichas Herramientas de Trabajo son propiedad de la Empresa y se le otorgan únicamente para realizar actividades y funciones inherentes a su trabajo. Por lo tanto, el Trabajador <span class="mark">no tendrá ninguna expectativa de privacidad</span> con relación al uso de las Herramientas de Trabajo.</p>`},
+
+  /* ----- benefit-specific originals ----- */
+  pay:{file:"R365-agreement · Section 6.1", enH:"Section 6.1. Monthly Base Salary.", esH:"Cláusula Sexta 6.1. Salario Mensual Base.",
+    en:`<p>The Employee shall receive from the Company as compensation for the services to be rendered and the obligations assumed hereunder, a <span class="mark">monthly gross salary</span>. Such compensation shall be payable in two monthly installments each month, with the understanding that the first payment shall be made no later than the 15th day of the month and the second payment shall be made no later than the last day of each month, in accordance with the Company's normal payroll practices (hereinafter a "Payday"). In the event that a Payday is not a business day in Mexico, then the compensation shall be paid on the immediately preceding business day.</p>`,
+    es:`<p>El Trabajador recibirá de la Empresa como remuneración por sus servicios y las obligaciones asumidas conforme al mismo, un <span class="mark">salario mensual bruto</span>. Dicha remuneración se pagará en dos pagos cada mes, debiendo realizar un primer pago a más tardar el día 15 del mes, y el segundo pago a más tardar el último día de cada mes, de acuerdo con las prácticas normales de nómina de la Empresa (en lo sucesivo el "Día de Pago"). En caso de que un Día de Pago sea inhábil en México, la remuneración se pagará el día hábil inmediato anterior.</p>`},
+
+  savings:{file:"R365-agreement · Section 6.2", enH:"Section 6.2. Savings Fund.", esH:"Cláusula Sexta 6.2. Fondo de Ahorro.",
+    en:`<p>The Company will establish a Savings Fund with equal contributions from both the Employee and the Company. The <span class="mark">Employee shall contribute 10% of his/her monthly salary</span> to the Savings Fund and the <span class="mark">Company shall make a matching contribution</span>. The contribution rate is established uniformly for all employees in accordance with applicable Mexican law. The Employee expressly authorizes the Company to make a deduction from the Employee's compensation in the aforementioned percentage as a contribution to the Savings Fund. For deducibility purposes following the Income Tax Law, the total amount of the Savings Fund may not exceed 1.3 times the UMA (Measurement and Update Unit) value elevated year.</p>`,
+    es:`<p>La Empresa conviene en establecer un Fondo de Ahorro que se constituirá con aportaciones iguales del Trabajador y de la Empresa. El <span class="mark">Trabajador aportará el 10% de su salario mensual</span> al Fondo de Ahorro y la <span class="mark">Empresa realizará una aportación igual</span> a la que realice el Trabajador. El porcentaje de contribución se establece de manera uniforme para todos los trabajadores, de conformidad con las disposiciones legales aplicables. El Trabajador expresamente autoriza a la Empresa para efectuar el descuento a su salario en el porcentaje antes mencionado por concepto de Fondo de Ahorro. Para efectos de deducibilidad y de conformidad con lo dispuesto por la Ley del Impuesto Sobre la Renta, dicha aportación no podrá exceder el monto equivalente a 1.3 veces el valor del UMA elevado al año.</p>`},
+
+  insurance:{file:"R365 · Employee Benefits Summary (MX)", enH:"Health & Insurance — coverage from Day 1.", esH:"Resumen de Prestaciones (MX) — Salud y Seguros.",
+    en:`<p>R365 provides comprehensive health and insurance <span class="mark">coverage from Day 1 of employment</span> through our partner providers.</p><p>• MetLife — Major Medical (Core + 7,000 UMAM with dependent coverage)<br>• Dentegra — Dental & Vision (accessible via MetLife credentials)<br>• <span class="mark">2× Salary Life Insurance</span> — through Mapfre<br>• Food Vouchers — monthly benefit via SiVale</p>`,
+    es:`<p>R365 ofrece cobertura integral de salud y seguros <span class="mark">desde el primer día de empleo</span> a través de proveedores aliados.</p><p>• MetLife — Gastos Médicos Mayores (Core + 7,000 UMAM con cobertura para dependientes)<br>• Dentegra — Dental y Visión (vía credenciales MetLife)<br>• <span class="mark">Seguro de Vida 2× Salario</span> — a través de Mapfre<br>• Vales de Despensa — beneficio mensual vía SiVale</p><p><em>(El resumen de prestaciones se publica en inglés.)</em></p>`},
+
+  telework:{file:"R365-agreement · Section 4 + Benefits Summary", enH:"Section 4 / Telework Support.", esH:"Cláusula Cuarta / Apoyo de Teletrabajo.",
+    en:`<p>Both parties agree that the principal place where the Employee shall provide their services will be at the address of the Company. However, the Employee may work remotely up to two days per week.</p><p>From the Benefits Summary: "Employees working <span class="mark">3 or more days per week from home</span> may be eligible for home office support, per applicable law and company policy. <span class="mark">Most employees work 2 days from home and do not qualify for this benefit.</span> Eligible support may include: Ergonomic Chair, Telework Expenses, Monthly Allowance."</p>`,
+    es:`<p>Las partes convienen que el principal lugar en el que el Trabajador prestará sus servicios será el domicilio de la Empresa. No obstante, el Trabajador podrá laborar de forma remota hasta dos días por semana.</p><p>Del Resumen de Prestaciones: los empleados que trabajan <span class="mark">3 o más días por semana desde casa</span> pueden ser elegibles para apoyo de oficina en casa, conforme a la ley aplicable y la política de la empresa. <span class="mark">La mayoría trabaja 2 días desde casa y no califica para este beneficio.</span> El apoyo elegible puede incluir: silla ergonómica, gastos de teletrabajo, asignación mensual.</p>`},
+
+  hybrid:{file:"R365-agreement · Section 4", enH:"Section 4. Workplace.", esH:"Cláusula Cuarta. Lugar de Trabajo.",
+    en:`<p>Both parties agree that the principal place where the Employee shall provide their services will be at the address of the Company. However, the Employee may work remotely up to two days per week.</p><p>If the Employee's assigned work schedule includes Tuesday, Wednesday and Thursday, the Employee <span class="mark">must work in the office three days per week</span>, specifically on Tuesday, Wednesday and Thursday. If the schedule overlaps with Tue/Wed/Thu but does not include all three, the Employee must work in the office two days per week. The Company may reasonably modify the Employee's work schedule, reporting schedule, or designated workplace in accordance with business needs and applicable law, <span class="mark">provided that the Employee is notified ten calendar days in advance</span>. It is expressly agreed that the Employee shall not work remotely more than forty per cent of the time (work hours).</p>`,
+    es:`<p>Las partes convienen que el principal lugar en el que el Trabajador prestará sus servicios será el domicilio de la Empresa. No obstante, el Trabajador podrá laborar de forma remota hasta dos días por semana.</p><p>Si el horario de trabajo asignado incluye martes, miércoles y jueves, el Trabajador <span class="mark">deberá presentarse a laborar tres días por semana</span>, específicamente martes, miércoles y jueves. Si coincide con martes, miércoles y/o jueves pero no incluye los tres, deberá presentarse dos días por semana. La Empresa podrá modificar de forma razonable el horario, el esquema de asistencia o el lugar de prestación de servicios conforme a las necesidades del negocio, <span class="mark">siempre que el Trabajador sea notificado con diez días naturales de anticipación</span>. Queda expresamente pactado que el Trabajador por ningún motivo trabajará de forma remota más del cuarenta por ciento del tiempo de trabajo.</p>`},
+
+  same:{file:"R365-agreement · Sections 5, 9, 11 + 21", enH:"Work Schedule · Vacation · Christmas Bonus · Governing Law.", esH:"Jornada · Vacaciones · Aguinaldo · Leyes Aplicables.",
+    en:`<p><b>Sec. 5 — Work Schedule:</b> The Employee shall work forty hours per week over five workdays each week in accordance with the needs of the Company and pursuant to section 59 of the Federal Labor Law. Therefore, the Employee shall receive two days of rest each week. The Employee shall take a 60-minute lunch each work shift.</p><p><b>Sec. 9 — Vacation:</b> The Employee shall be entitled to enjoy an annual vacation period of twelve (12) days following the first complete year of services. Additionally, the Company shall pay to the Employee a 25% vacation premium.</p><p><b>Sec. 11 — Christmas Bonus:</b> The Employee shall enjoy a yearly Christmas bonus equivalent to 30 days' base salary, payable before the 20th day of December of each year, pursuant to Article 87 of the Federal Labor Law.</p><p><b>Sec. 21 — Governing Law:</b> The parties expressly submit to the jurisdiction of the competent Labor Courts of Mexico City, in case of any dispute arising in connection with this Agreement.</p>`,
+    es:`<p><b>Cláusula 5 — Jornada:</b> La jornada de trabajo será de cuarenta horas semanales y será distribuida en cinco días de cada semana de conformidad con las necesidades de la Empresa y de acuerdo con el artículo 59 de la Ley Federal del Trabajo. Por lo tanto, el Trabajador gozará de dos días de descanso cada semana. Gozará de un período de 60 minutos para alimentos por jornada.</p><p><b>Cláusula 9 — Vacaciones:</b> El Trabajador tendrá derecho a un período vacacional anual de doce (12) días del primer año completo de servicios. Adicionalmente, la Empresa pagará una prima vacacional de 25%.</p><p><b>Cláusula 11 — Aguinaldo:</b> El Trabajador tendrá derecho a un aguinaldo anual de 30 días de salario, que se pagará antes del día 20 de diciembre de cada año, de conformidad con el Artículo 87 de la Ley Federal del Trabajo.</p><p><b>Cláusula 21 — Leyes Aplicables:</b> Las partes se someten expresamente a la jurisdicción de los Tribunales Laborales de la Ciudad de México, para resolver cualquier controversia relacionada con el presente Contrato.</p>`}
+};
+
+/* map each benefit to its original-text key */
+const BENEFIT_SHOT = ["pay","savings","insurance","tenure","telework","hybrid","excl","conf","receipt","same"];
+
+/* ---------- RENDER ---------- */
+const bList=document.getElementById('benefitList');
+BENEFITS.forEach((b,i)=>{
+  const row=document.createElement('div');
+  row.className='brow '+b.type;
+  row.innerHTML=`
+    <div class="brow-top">
+      <div class="bicon ${b.type}">${b.icon}</div>
+      <div class="bmain"><div class="btitle">${b.title}</div><div class="bsub">${b.sub}</div></div>
+      <span class="btag ${b.type}">${b.tag}</span>
+    </div>
+    <div class="vbar">
+      <div class="vcell d"><span class="vl">Deel</span><span class="vv">${b.deel}</span></div>
+      <div class="vcell r"><span class="vl">R365</span><span class="vv">${b.r365}</span></div>
+    </div>
+    <div class="moreline">🔍 tap for detail &amp; original text ›</div>`;
+  row.addEventListener('click',()=>openBenefit(i));
+  bList.appendChild(row);
+});
+
+const cList=document.getElementById('clauseList');
+CLAUSES.forEach(c=>{
+  const el=document.createElement('div');
+  el.className='clause '+c.color;
+  el.innerHTML=`
+    <div class="cl-top">
+      <div class="cl-icon ${c.color}">${c.icon}</div>
+      <div class="cl-ht"><div class="cl-ref">${c.ref}</div><div class="cl-headline">${c.headline}</div></div>
+    </div>
+    <div class="cl-meaning">${c.meaning}</div>
+    <div class="origbtns">
+      <button class="origbtn es" data-shot="${c.shot}"><span class="fl">🇲🇽 Español</span><span class="govchip">PREVALECE</span><span class="go">🔍 ver texto completo</span></button>
+      <button class="origbtn en" data-shot="${c.shot}"><span class="fl">🇬🇧 English</span><span class="go">🔍 view full text</span></button>
+    </div>
+    <div class="lawnote">
+      <div class="lh">§ Lawyer's note</div>
+      <p>${c.law}</p>
+      ${c.flag?`<div class="actionflag">${c.flag}</div>`:''}
+    </div>`;
+  el.querySelectorAll('.origbtn').forEach(b=>b.addEventListener('click',()=>openShot(b.dataset.shot)));
+  cList.appendChild(el);
+});
+
+/* ---------- POPUP LOGIC ---------- */
+const scrim=document.getElementById('scrim');
+const pop=document.getElementById('pop');
+const popInner=document.getElementById('popInner');
+
+function show(){scrim.classList.add('on');pop.classList.add('on');document.body.style.overflow='hidden';}
+function closePop(){scrim.classList.remove('on');pop.classList.remove('on');document.body.style.overflow='';}
+
+function openShot(key){
+  const s=SHOTS[key]; if(!s)return;
+  popInner.innerHTML=`
+    <div class="shot-frame">
+      <div class="shot-bar">
+        <span class="dots"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+        <span class="fname">${s.file}</span>
+        <span class="env">Docusign 381D116F-E983</span>
+      </div>
+      <div class="shot-scroll">
+        <div class="shot-logo">Restaurant<span class="r3">365</span></div>
+        <div class="shot-cols">
+          <div class="shot-col l"><span class="clabel">English · reference</span><h4>${s.enH}</h4>${s.en}</div>
+          <div class="shot-col"><span class="clabel">Español · prevalece</span><h4>${s.esH}</h4>${s.es}</div>
+        </div>
+      </div>
+      <div class="shot-cap">Original contract text · both columns as printed</div>
+    </div>`;
+  show();
+}
+
+function openBenefit(i){
+  const b=BENEFITS[i];
+  const shotKey=BENEFIT_SHOT[i];
+  popInner.innerHTML=`
+    <div class="bpop">
+      <div class="bpop-head">
+        <div class="bi ${b.type}" style="background:${b.type==='good'?'rgba(61,220,132,.14)':b.type==='bad'?'rgba(255,93,82,.14)':b.type==='warn'?'rgba(255,176,46,.14)':'rgba(148,160,176,.12)'}">${b.icon}</div>
+        <div><h3>${b.title}</h3><div class="hs">${b.sub}</div></div>
+      </div>
+      <div class="bpop-body">
+        <div class="vbar">
+          <div class="vcell d"><span class="vl">Deel · old</span><span class="vv">${b.deel}</span></div>
+          <div class="vcell r"><span class="vl">R365 · new</span><span class="vv">${b.r365}</span></div>
+        </div>
+        ${b.verdict.map(v=>`<p class="verdict">${v}</p>`).join('')}
+        ${shotKey&&SHOTS[shotKey]?`<button class="viewOrig" data-shot="${shotKey}">🔍 View the original contract text</button>`:''}
+      </div>
+    </div>`;
+  const vo=popInner.querySelector('.viewOrig');
+  if(vo) vo.addEventListener('click',()=>openShot(vo.dataset.shot));
+  show();
+}
+
+scrim.addEventListener('click',closePop);
+document.getElementById('popClose').addEventListener('click',closePop);
+</script>
+</body>
+</html>
