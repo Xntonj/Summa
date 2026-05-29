@@ -166,7 +166,7 @@ def get_text(job_id):
         return "", 204
     return job["summary"], 200, {"Content-Type": "text/plain"}
 
-CONTRACT_PASSWORD = os.environ.get("CONTRACT_PASSWORD", "r365family")
+CONTRACT_PASSWORD = os.environ.get("CONTRACT_PASSWORD", "contrato123")
 
 @app.route("/contract")
 def contract():
